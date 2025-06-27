@@ -1,52 +1,42 @@
-"""
-Local model loader for the Model Comparator CLI
-"""
-from typing import Dict, Any, Optional
-import torch
-from pathlib import Path
+# models/local_model.py
+from transformers import pipeline
 
-class LocalModelLoader:
-    def __init__(self, model_path: str, **kwargs):
-        self.model_path = Path(model_path)
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = None
-        self.tokenizer = None
-    
-    def load_model(self):
-        """Load the model and tokenizer from local path"""
-        try:
-            # This is a simplified example - actual implementation will depend on the model type
-            from transformers import AutoModelForCausalLM, AutoTokenizer
-            
-            self.tokenizer = AutoTokenizer.from_pretrained(str(self.model_path))
-            self.model = AutoModelForCausalLM.from_pretrained(
-                str(self.model_path),
-                device_map="auto",
-                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
-            )
-            return True
-        except Exception as e:
-            print(f"Error loading model: {e}")
-            return False
-    
-    def generate(self, prompt: str, **kwargs) -> Dict[str, Any]:
-        """Generate text using the loaded model"""
-        if not self.model or not self.tokenizer:
-            return {"error": "Model not loaded. Call load_model() first."}
-        
-        try:
-            inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-            outputs = self.model.generate(
-                **inputs,
-                max_new_tokens=kwargs.get("max_tokens", 100),
-                temperature=kwargs.get("temperature", 0.7),
-                do_sample=True
-            )
-            
-            generated_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            return {
-                "content": generated_text,
-                "usage": {"input_tokens": inputs.input_ids.shape[1]}
-            }
-        except Exception as e:
-            return {"error": str(e)}
+# Define local model mapping
+model_map = {
+    "base": "gpt2",  # Small base model
+    "instruct": "google/flan-t5-base",  # Instruction-tuned
+    "finetuned": "tiiuae/falcon-7b-instruct"  # Example fine-tuned model (must be downloaded first)
+}
+
+# Cache pipelines to avoid reloading each time
+loaded_pipelines = {}
+
+def query_local_model(model_type, prompt):
+    model_id = model_map.get(model_type, "gpt2")
+
+    try:
+        # Load the model pipeline only once per model
+        if model_id not in loaded_pipelines:
+            print(f"Loading model: {model_id} (this may take a while the first time)")
+            pipe = pipeline("text-generation", model=model_id)
+            loaded_pipelines[model_id] = pipe
+        else:
+            pipe = loaded_pipelines[model_id]
+
+        # Run the prompt through the pipeline
+        output = pipe(prompt, max_length=200, do_sample=True, temperature=0.7)[0]["generated_text"]
+
+        return {
+            "output": output.strip(),
+            "model": model_id,
+            "tokens_used": "N/A",  # Token count not directly available in pipeline
+            "context_window": "Depends on model (e.g., GPT2 ~1024 tokens)"
+        }
+
+    except Exception as e:
+        return {
+            "output": f"Error loading or running model: {str(e)}",
+            "model": model_id,
+            "tokens_used": "N/A",
+            "context_window": "Unknown"
+        }

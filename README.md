@@ -1,82 +1,105 @@
-# Model Comparator CLI
+# 🤖 Model Comparison CLI Tool
 
-A command-line tool to compare different LLM models (OpenAI, Anthropic, HuggingFace, and local models) by sending them the same prompt and analyzing their responses.
+A simple command-line tool to compare **Base**, **Instruct**, and **Fine-tuned** language models from **OpenAI**, **Hugging Face**, and **local models**.
 
-## Features
+This tool helps developers and learners understand how different model types behave when given the same prompt.
 
-- Compare multiple LLM models side by side
-- Support for OpenAI, Anthropic, HuggingFace, and local models
-- Token counting and cost estimation
-- Response time measurement
-- Visualization of results
-- Prompt templates for common tasks
+---
 
-## Installation
+## 📦 Features
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd model-comparator-cli
-   ```
+- Compare outputs from Base, Instruct, and Fine-tuned models
+- Supports OpenAI, Hugging Face, and locally downloaded models
+- View token usage and context window info
+- Lightweight and easy to extend
 
-2. Install the required dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+---
 
-3. Copy the example environment file and add your API keys:
-   ```bash
-   cp .env.example .env
-   ```
-   Then edit the `.env` file with your API keys.
+## 🚀 Setup Instructions
 
-## Usage
-
-Basic usage:
+### 1. Clone the Repo
 ```bash
-python main.py --prompt "Your prompt here" --models gpt-3.5-turbo gpt-4 claude-3-opus
+git clone https://github.com/yourname/model-comparator-cli.git
+cd model-comparator-cli
 ```
 
-### Command Line Arguments
-
-- `--prompt`: The prompt to send to the models (required)
-- `--models`: List of models to compare (space-separated)
-- `--template`: Use a predefined prompt template (see `prompts/prompt_templates.json`)
-- `--params`: Additional parameters as JSON string
-- `--visualize`: Show visualizations of the results
-
-### Examples
-
-Compare two models with a custom prompt:
+### 2. Create Virtual Environment (Optional)
 ```bash
-python main.py --prompt "Explain quantum computing in simple terms" --models gpt-3.5-turbo gpt-4
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 ```
 
-Use a predefined template:
+### 3. Install Dependencies
 ```bash
-python main.py --template summarization --params '{"text":"Long text to summarize..."}' --models gpt-3.5-turbo claude-3-opus
+pip install -r requirements.txt
 ```
 
-## Configuration
+### 4. Add API Keys
+- Create a `.env` file in the root folder.
+- Add the following (see `.env.example`):
 
-### Environment Variables
-
-Create a `.env` file in the project root with your API keys:
-
-```
-OPENAI_API_KEY=your_openai_api_key
-ANTHROPIC_API_KEY=your_anthropic_api_key
-HUGGINGFACE_API_KEY=your_huggingface_api_key
+```env
+OPENAI_API_KEY=your-openai-key
+HF_API_KEY=your-huggingface-key
 ```
 
-### Prompt Templates
+---
 
-You can define custom prompt templates in `prompts/prompt_templates.json`. Each template should have a `system` and `user` message that can include placeholders.
+## 🛠️ Usage
 
-## Contributing
+### 📘 Basic Command
+```bash
+python main.py --provider openai --model_type instruct --prompt "Explain gravity like I'm 5."
+```
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### 🧠 Arguments
+| Argument        | Description                            | Values                        |
+|----------------|----------------------------------------|-------------------------------|
+| `--provider`    | Model provider                         | `openai`, `huggingface`, `local` |
+| `--model_type`  | Type of model                          | `base`, `instruct`, `finetuned` |
+| `--prompt`      | Your input prompt                      | "your text here"             |
 
-## License
+---
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 📁 Folder Structure
+```
+model-comparator-cli/
+├── main.py
+├── models/
+│   ├── openai.py
+│   ├── huggingface.py
+│   └── local_model.py
+├── .env.example
+├── README.md
+├── comparisons.md
+└── requirements.txt
+```
+
+---
+
+## ✅ Example
+```bash
+python main.py --provider huggingface --model_type instruct --prompt "Summarize the French Revolution."
+```
+```
+=== Model Output ===
+The French Revolution was a period of...
+
+=== Model Info ===
+Model: google/flan-t5-base
+Type: Instruct
+Token usage: N/A
+Context window: ~1024–4096 tokens depending on model
+```
+
+---
+
+## 📌 Notes
+- Make sure local models are downloaded if you're using `local` provider.
+- OpenAI fine-tuned model name can be set in `.env` using `OPENAI_FINE_TUNED_MODEL`
+- Hugging Face fine-tuned model can be set with `HF_FINE_TUNED_MODEL`
+
+---
+
+## 📜 License
+MIT License. Free to use and modify.
